@@ -70,6 +70,27 @@ class _AddStockScreenState extends State<AddStockScreen> {
     Navigator.pop(context, true);
   }
 
+  Widget buildTextField(TextEditingController controller, String label, {bool isNumber = false, bool isOptional = false}) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: TextFormField(
+        controller: controller,
+        keyboardType: isNumber ? TextInputType.number : TextInputType.text,
+        decoration: InputDecoration(labelText: label, border: const OutlineInputBorder()),
+        validator: (value) {
+          if (isOptional) {
+            // الحقل اختياري، فارغ مقبول
+            return null;
+          }
+          if (value == null || value.isEmpty) {
+            return 'هذا الحقل مطلوب';
+          }
+          return null;
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isEditing = widget.stockToEdit != null;
@@ -87,7 +108,7 @@ class _AddStockScreenState extends State<AddStockScreen> {
                 buildTextField(dateController, 'تاريخ الشراء'),
                 buildTextField(nameController, 'اسم السهم'),
                 buildTextField(buyPriceController, 'سعر الشراء', isNumber: true),
-                buildTextField(sellPriceController, 'سعر البيع (اختياري)', isNumber: true),
+                buildTextField(sellPriceController, 'سعر البيع (اختياري)', isNumber: true, isOptional: true),
                 buildTextField(taxController, 'السعر الضريبي', isNumber: true),
                 const SizedBox(height: 20),
                 ElevatedButton(
@@ -98,18 +119,6 @@ class _AddStockScreenState extends State<AddStockScreen> {
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  Widget buildTextField(TextEditingController controller, String label, {bool isNumber = false}) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: TextFormField(
-        controller: controller,
-        keyboardType: isNumber ? TextInputType.number : TextInputType.text,
-        decoration: InputDecoration(labelText: label, border: const OutlineInputBorder()),
-        validator: (value) => (value == null || value.isEmpty) ? 'هذا الحقل مطلوب' : null,
       ),
     );
   }
