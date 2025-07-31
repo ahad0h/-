@@ -1,0 +1,82 @@
+import 'package:flutter/material.dart';
+import '../models/stock.dart';
+import '../data/storage_helper.dart';
+import 'add_stock_screen.dart';
+
+class MonthDetailScreen extends StatefulWidget {
+  final String month;
+  const MonthDetailScreen({required this.month, super.key});
+
+  @override
+  State<MonthDetailScreen> createState() => _MonthDetailScreenState();
+}
+
+class _MonthDetailScreenState extends State<MonthDetailScreen> {
+  List<Stock> stocks = [];
+
+  @override
+  void initState() {
+    super.initState();
+    loadStocks();
+  }
+
+  Future<void> loadStocks() async {
+    final loadedStocks = await StorageHelper.loadStocks(widget.month);
+    setState(() {
+      stocks = loadedStocks;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Scaffold(
+        appBar: AppBar(title: Text(widget.month)),
+        body: ListView.builder(
+          itemCount: stocks.length,
+          itemBuilder: (context, index) {
+            final stock = stocks[index];
+            final profitLoss = stock.profitOrLoss;
+            final color = profitLoss > 0
+                ? Colors.green
+                : profitLoss < 0
+                ? Colors.red
+                : Colors.grey;
+
+            return Card(
+              margin: const EdgeInsets.all(10),
+              child: ListTile(
+                title: Text(stock.name),
+                subtitle: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('تاريخ الشراء: ${stock.date}'),
+                    Text('سعر الشراء: ${stock.buyPrice}'),
+                    Text('سعر البيع: ${stock.sellPrice ?? '-'}'),
+                    Text('السعر الضريبي: ${stock.tax}'),
+                    Text('الربح/الخسارة: ${profitLoss.toStringAsFixed(2)}',
+                        style: TextStyle(color: color)),
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
+        floatingActionButton: FloatingActionButton(
+          onPressed: () async {
+            await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => AddStockScreen(month: widget.month),
+              ),
+            );
+            await loadStocks();
+          },
+          child: const Icon(Icons.add),
+        ),
+      ),
+    );
+  }
+}
+
