@@ -14,6 +14,12 @@ class MonthDetailScreen extends StatefulWidget {
 class _MonthDetailScreenState extends State<MonthDetailScreen> {
   List<Stock> stocks = [];
 
+  final List<String> months = [
+    'يناير', 'فبراير', 'مارس', 'أبريل',
+    'مايو', 'يونيو', 'يوليو', 'أغسطس',
+    'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'
+  ];
+
   @override
   void initState() {
     super.initState();
@@ -25,13 +31,15 @@ class _MonthDetailScreenState extends State<MonthDetailScreen> {
     setState(() {
       stocks = loadedStocks;
     });
+
+    await StorageHelper.updateFollowingMonths(widget.month, months);
   }
 
   Future<void> deleteStock(int index) async {
     final stocks = await StorageHelper.loadStocks(widget.month);
     stocks.removeAt(index);
     await StorageHelper.saveStocks(widget.month, stocks);
-    loadStocks();
+    await loadStocks();
   }
 
   @override
@@ -55,17 +63,16 @@ class _MonthDetailScreenState extends State<MonthDetailScreen> {
             : SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: SizedBox(
-            width: 770, // عرض أكبر لإضافة عمود الإجراءات
+            width: 770,
             child: ListView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: stocks.length + 1,
               itemBuilder: (context, index) {
                 if (index == 0) {
-                  // رأس الجدول
                   return Card(
                     margin: const EdgeInsets.all(10),
-                    color: Colors.blue.shade100,
+                    color: Colors.grey.shade50,
                     child: Padding(
                       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
                       child: Table(
@@ -76,17 +83,17 @@ class _MonthDetailScreenState extends State<MonthDetailScreen> {
                           3: FlexColumnWidth(2),
                           4: FlexColumnWidth(2),
                           5: FlexColumnWidth(2),
-                          6: FixedColumnWidth(100), // عرض ثابت لعمود الإجراءات
+                          6: FixedColumnWidth(100),
                         },
                         defaultVerticalAlignment: TableCellVerticalAlignment.middle,
                         children: [
                           TableRow(
-                            decoration: BoxDecoration(color: Colors.blue.shade100),
+                            decoration: BoxDecoration(color: Colors.grey.shade50),
                             children: [
                               Padding(
                                 padding: const EdgeInsets.symmetric(vertical: 6),
                                 child: Center(
-                                  child: Icon(Icons.calendar_today, size: 18, color: Colors.white),
+                                  child: Icon(Icons.calendar_today, size: 18, color: Colors.black),
                                 ),
                               ),
                               Padding(
@@ -201,7 +208,7 @@ class _MonthDetailScreenState extends State<MonthDetailScreen> {
                                       iconSize: 20,
                                       padding: EdgeInsets.zero,
                                       constraints: const BoxConstraints(),
-                                      icon: const Icon(Icons.edit, color: Colors.blue),
+                                      icon: const Icon(Icons.edit, color: Colors.blueAccent),
                                       tooltip: 'تعديل',
                                       onPressed: () async {
                                         final result = await Navigator.push(
