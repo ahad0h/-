@@ -1,0 +1,36 @@
+class Stock {
+  final String date;
+  final String name;
+  final double buyPrice;
+  final double? sellPrice;
+  final double tax;
+
+  Stock({
+    required this.date,
+    required this.name,
+    required this.buyPrice,
+    this.sellPrice,
+    required this.tax,
+  });
+
+  double get profitOrLoss {
+    if (sellPrice == null) return 0.0;
+    return (sellPrice! - buyPrice) - tax;
+  }
+
+  Map<String, dynamic> toJson() => {
+    'date': date,
+    'name': name,
+    'buyPrice': buyPrice,
+    'sellPrice': sellPrice,
+    'tax': tax,
+  };
+
+  factory Stock.fromJson(Map<String, dynamic> json) => Stock(
+    date: json['date'],
+    name: json['name'],
+    buyPrice: json['buyPrice'],
+    sellPrice: json['sellPrice'],
+    tax: json['tax'],
+  );
+}
