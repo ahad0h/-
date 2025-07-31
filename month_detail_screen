@@ -29,38 +29,142 @@ class _MonthDetailScreenState extends State<MonthDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    const textStyleHeader = TextStyle(
+      fontWeight: FontWeight.bold,
+      fontSize: 13,
+      color: Colors.black87,
+    );
+    const textStyleCell = TextStyle(
+      fontSize: 12,
+      color: Colors.black87,
+    );
+
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
         appBar: AppBar(title: Text(widget.month)),
-        body: ListView.builder(
-          itemCount: stocks.length,
+        body: stocks.isEmpty
+            ? const Center(child: Text('لا توجد بيانات بعد'))
+            : ListView.builder(
+          itemCount: stocks.length + 1, // +1 للرأس (العناوين)
           itemBuilder: (context, index) {
-            final stock = stocks[index];
-            final profitLoss = stock.profitOrLoss;
-            final color = profitLoss > 0
-                ? Colors.green
-                : profitLoss < 0
-                ? Colors.red
-                : Colors.grey;
-
-            return Card(
-              margin: const EdgeInsets.all(10),
-              child: ListTile(
-                title: Text(stock.name),
-                subtitle: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('تاريخ الشراء: ${stock.date}'),
-                    Text('سعر الشراء: ${stock.buyPrice}'),
-                    Text('سعر البيع: ${stock.sellPrice ?? '-'}'),
-                    Text('السعر الضريبي: ${stock.tax}'),
-                    Text('الربح/الخسارة: ${profitLoss.toStringAsFixed(2)}',
-                        style: TextStyle(color: color)),
-                  ],
+            if (index == 0) {
+              // رأس الجدول - العناوين
+              return Card(
+                margin: const EdgeInsets.all(10),
+                color: Colors.blue.shade100,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
+                  child: Table(
+                    columnWidths: const {
+                      0: FlexColumnWidth(2), // تاريخ الشراء
+                      1: FlexColumnWidth(3), // اسم السهم
+                      2: FlexColumnWidth(2), // سعر الشراء
+                      3: FlexColumnWidth(2), // سعر البيع
+                      4: FlexColumnWidth(2), // السعر الضريبي
+                      5: FlexColumnWidth(2), // الربح/الخسارة
+                    },
+                    defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+                    children: [
+                      TableRow(
+                        decoration: BoxDecoration(color: Colors.blue.shade100),
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 6),
+                            child: Icon(Icons.calendar_today, size: 18, color: Colors.white),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 6),
+                            child: Center(
+                              child: Text('اسم السهم', style: textStyleHeader),
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 6),
+                            child: Text('سعر الشراء', style: textStyleHeader),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 6),
+                            child: Text('سعر البيع', style: textStyleHeader),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 6),
+                            child: Text('السعر الضريبي', style: textStyleHeader),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 6),
+                            child: Text('الربح/الخسارة', style: textStyleHeader),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            );
+              );
+            } else {
+              final stock = stocks[index - 1];
+              final profitLoss = stock.profitOrLoss;
+              final color = profitLoss > 0
+                  ? Colors.green
+                  : profitLoss < 0
+                  ? Colors.red
+                  : Colors.grey;
+
+              return Card(
+                margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                elevation: 2,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 6),
+                  child: Table(
+                    columnWidths: const {
+                      0: FlexColumnWidth(2),
+                      1: FlexColumnWidth(3),
+                      2: FlexColumnWidth(2),
+                      3: FlexColumnWidth(2),
+                      4: FlexColumnWidth(2),
+                      5: FlexColumnWidth(2),
+                    },
+                    defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+                    children: [
+                      TableRow(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 4),
+                            child: Text(stock.date, style: textStyleCell),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 4),
+                            child: Center(child: Text(stock.name, style: textStyleCell)),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 4),
+                            child: Text(stock.buyPrice.toString(), style: textStyleCell),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 4),
+                            child: Text(stock.sellPrice?.toString() ?? '-', style: textStyleCell),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 4),
+                            child: Text(stock.tax.toString(), style: textStyleCell),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 4),
+                            child: Text(
+                              profitLoss.toStringAsFixed(2),
+                              style: textStyleCell.copyWith(color: color, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }
           },
         ),
         floatingActionButton: FloatingActionButton(
@@ -79,4 +183,3 @@ class _MonthDetailScreenState extends State<MonthDetailScreen> {
     );
   }
 }
-
