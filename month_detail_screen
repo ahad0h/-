@@ -27,11 +27,18 @@ class _MonthDetailScreenState extends State<MonthDetailScreen> {
     });
   }
 
+  Future<void> deleteStock(int index) async {
+    final stocks = await StorageHelper.loadStocks(widget.month);
+    stocks.removeAt(index);
+    await StorageHelper.saveStocks(widget.month, stocks);
+    loadStocks();
+  }
+
   @override
   Widget build(BuildContext context) {
     const textStyleHeader = TextStyle(
       fontWeight: FontWeight.bold,
-      fontSize: 13,
+      fontSize: 15,
       color: Colors.black87,
     );
     const textStyleCell = TextStyle(
@@ -45,137 +52,227 @@ class _MonthDetailScreenState extends State<MonthDetailScreen> {
         appBar: AppBar(title: Text(widget.month)),
         body: stocks.isEmpty
             ? const Center(child: Text('لا توجد بيانات بعد'))
-            : ListView.builder(
-          itemCount: stocks.length + 1, // +1 للرأس (العناوين)
-          itemBuilder: (context, index) {
-            if (index == 0) {
-              // رأس الجدول - العناوين
-              return Card(
-                margin: const EdgeInsets.all(10),
-                color: Colors.blue.shade100,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
-                  child: Table(
-                    columnWidths: const {
-                      0: FlexColumnWidth(2), // تاريخ الشراء
-                      1: FlexColumnWidth(3), // اسم السهم
-                      2: FlexColumnWidth(2), // سعر الشراء
-                      3: FlexColumnWidth(2), // سعر البيع
-                      4: FlexColumnWidth(2), // السعر الضريبي
-                      5: FlexColumnWidth(2), // الربح/الخسارة
-                    },
-                    defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-                    children: [
-                      TableRow(
-                        decoration: BoxDecoration(color: Colors.blue.shade100),
+            : SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: SizedBox(
+            width: 770, // عرض أكبر لإضافة عمود الإجراءات
+            child: ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: stocks.length + 1,
+              itemBuilder: (context, index) {
+                if (index == 0) {
+                  // رأس الجدول
+                  return Card(
+                    margin: const EdgeInsets.all(10),
+                    color: Colors.blue.shade100,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
+                      child: Table(
+                        columnWidths: const {
+                          0: FlexColumnWidth(2),
+                          1: FlexColumnWidth(3),
+                          2: FlexColumnWidth(2),
+                          3: FlexColumnWidth(2),
+                          4: FlexColumnWidth(2),
+                          5: FlexColumnWidth(2),
+                          6: FixedColumnWidth(100), // عرض ثابت لعمود الإجراءات
+                        },
+                        defaultVerticalAlignment: TableCellVerticalAlignment.middle,
                         children: [
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 6),
-                            child: Icon(Icons.calendar_today, size: 18, color: Colors.white),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 6),
-                            child: Center(
-                              child: Text('اسم السهم', style: textStyleHeader),
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 6),
-                            child: Text('سعر الشراء', style: textStyleHeader),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 6),
-                            child: Text('سعر البيع', style: textStyleHeader),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 6),
-                            child: Text('السعر الضريبي', style: textStyleHeader),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 6),
-                            child: Text('الربح/الخسارة', style: textStyleHeader),
+                          TableRow(
+                            decoration: BoxDecoration(color: Colors.blue.shade100),
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 6),
+                                child: Center(
+                                  child: Icon(Icons.calendar_today, size: 18, color: Colors.white),
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 6),
+                                child: Center(
+                                  child: Text('اسم السهم', style: textStyleHeader, overflow: TextOverflow.ellipsis),
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 6),
+                                child: Center(
+                                  child: Text('سعر الشراء', style: textStyleHeader, overflow: TextOverflow.ellipsis),
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 6),
+                                child: Center(
+                                  child: Text('سعر البيع', style: textStyleHeader, overflow: TextOverflow.ellipsis),
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 6),
+                                child: Center(
+                                  child: Text('السعر الضريبي', style: textStyleHeader, overflow: TextOverflow.ellipsis),
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 6),
+                                child: Center(
+                                  child: Text('الربح/الخسارة', style: textStyleHeader, overflow: TextOverflow.ellipsis),
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 6),
+                                child: Center(
+                                  child: Text('إجراءات', style: textStyleHeader),
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
-                    ],
-                  ),
-                ),
-              );
-            } else {
-              final stock = stocks[index - 1];
-              final profitLoss = stock.profitOrLoss;
-              final color = profitLoss > 0
-                  ? Colors.green
-                  : profitLoss < 0
-                  ? Colors.red
-                  : Colors.grey;
+                    ),
+                  );
+                } else {
+                  final stock = stocks[index - 1];
+                  final profitLoss = stock.profitOrLoss;
+                  final color = profitLoss > 0
+                      ? Colors.green
+                      : profitLoss < 0
+                      ? Colors.red
+                      : Colors.grey;
 
-              return Card(
-                margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                elevation: 2,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 6),
-                  child: Table(
-                    columnWidths: const {
-                      0: FlexColumnWidth(2),
-                      1: FlexColumnWidth(3),
-                      2: FlexColumnWidth(2),
-                      3: FlexColumnWidth(2),
-                      4: FlexColumnWidth(2),
-                      5: FlexColumnWidth(2),
-                    },
-                    defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-                    children: [
-                      TableRow(
+                  return Card(
+                    margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    elevation: 2,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 6),
+                      child: Table(
+                        columnWidths: const {
+                          0: FlexColumnWidth(2),
+                          1: FlexColumnWidth(3),
+                          2: FlexColumnWidth(2),
+                          3: FlexColumnWidth(2),
+                          4: FlexColumnWidth(2),
+                          5: FlexColumnWidth(2),
+                          6: FixedColumnWidth(100),
+                        },
+                        defaultVerticalAlignment: TableCellVerticalAlignment.middle,
                         children: [
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 4),
-                            child: Text(stock.date, style: textStyleCell),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 4),
-                            child: Center(child: Text(stock.name, style: textStyleCell)),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 4),
-                            child: Text(stock.buyPrice.toString(), style: textStyleCell),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 4),
-                            child: Text(stock.sellPrice?.toString() ?? '-', style: textStyleCell),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 4),
-                            child: Text(stock.tax.toString(), style: textStyleCell),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 4),
-                            child: Text(
-                              profitLoss.toStringAsFixed(2),
-                              style: textStyleCell.copyWith(color: color, fontWeight: FontWeight.bold),
-                            ),
+                          TableRow(
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 4),
+                                child: Center(
+                                  child: Text(stock.date, style: textStyleCell, overflow: TextOverflow.ellipsis),
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 4),
+                                child: Center(child: Text(stock.name, style: textStyleCell, overflow: TextOverflow.ellipsis)),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 4),
+                                child: Text(stock.buyPrice.toString(), style: textStyleCell, overflow: TextOverflow.ellipsis),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 4),
+                                child: Text(stock.sellPrice?.toString() ?? '-', style: textStyleCell, overflow: TextOverflow.ellipsis),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 4),
+                                child: Text(stock.tax.toString(), style: textStyleCell, overflow: TextOverflow.ellipsis),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 4),
+                                child: Text(
+                                  profitLoss.toStringAsFixed(2),
+                                  style: textStyleCell.copyWith(color: color, fontWeight: FontWeight.bold),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 0, horizontal: 0),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    IconButton(
+                                      iconSize: 20,
+                                      padding: EdgeInsets.zero,
+                                      constraints: const BoxConstraints(),
+                                      icon: const Icon(Icons.edit, color: Colors.blue),
+                                      tooltip: 'تعديل',
+                                      onPressed: () async {
+                                        final result = await Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (_) => AddStockScreen(
+                                              month: widget.month,
+                                              stockToEdit: stock,
+                                              stockIndex: index - 1,
+                                            ),
+                                          ),
+                                        );
+                                        if (result == true) {
+                                          loadStocks();
+                                        }
+                                      },
+                                    ),
+                                    IconButton(
+                                      iconSize: 20,
+                                      padding: EdgeInsets.zero,
+                                      constraints: const BoxConstraints(),
+                                      icon: const Icon(Icons.delete, color: Colors.red),
+                                      tooltip: 'حذف',
+                                      onPressed: () async {
+                                        final confirmed = await showDialog<bool>(
+                                          context: context,
+                                          builder: (context) => AlertDialog(
+                                            title: const Text('تأكيد الحذف'),
+                                            content: const Text('هل أنت متأكد من حذف هذا السهم؟'),
+                                            actions: [
+                                              TextButton(
+                                                onPressed: () => Navigator.pop(context, false),
+                                                child: const Text('إلغاء'),
+                                              ),
+                                              TextButton(
+                                                onPressed: () => Navigator.pop(context, true),
+                                                child: const Text('حذف'),
+                                              ),
+                                            ],
+                                          ),
+                                        );
+                                        if (confirmed == true) {
+                                          await deleteStock(index - 1);
+                                        }
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
-                    ],
-                  ),
-                ),
-              );
-            }
-          },
+                    ),
+                  );
+                }
+              },
+            ),
+          ),
         ),
         floatingActionButton: FloatingActionButton(
           onPressed: () async {
-            await Navigator.push(
+            final result = await Navigator.push(
               context,
               MaterialPageRoute(
                 builder: (_) => AddStockScreen(month: widget.month),
               ),
             );
-            await loadStocks();
+            if (result == true) {
+              loadStocks();
+            }
           },
           child: const Icon(Icons.add),
         ),
