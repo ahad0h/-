@@ -1,0 +1,89 @@
+import 'package:flutter/material.dart';
+import '../models/stock.dart';
+import '../data/storage_helper.dart';
+import 'month_detail_screen.dart';
+
+class MonthsScreen extends StatefulWidget {
+  const MonthsScreen({super.key});
+
+  @override
+  State<MonthsScreen> createState() => _MonthsScreenState();
+}
+
+class _MonthsScreenState extends State<MonthsScreen> {
+  final List<String> months = [
+    'يناير', 'فبراير', 'مارس', 'أبريل',
+    'مايو', 'يونيو', 'يوليو', 'أغسطس',
+    'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'
+  ];
+
+  Map<String, List<Stock>> stocksByMonth = {};
+
+  @override
+  void initState() {
+    super.initState();
+    loadAllMonthsStocks();
+  }
+
+  Future<void> loadAllMonthsStocks() async {
+    Map<String, List<Stock>> loaded = {};
+    for (String month in months) {
+      final stocks = await StorageHelper.loadStocks(month);
+      loaded[month] = stocks;
+    }
+    setState(() {
+      stocksByMonth = loaded;
+    });
+  }
+
+  double calculateMonthTotal(String month) {
+    final stocks = stocksByMonth[month] ?? [];
+    return stocks.fold(0.0, (sum, s) => sum + s.profitOrLoss);
+  }
+
+  Color getColorForAmount(double amount) {
+    if (amount > 0) return Colors.green;
+    if (amount < 0) return Colors.red;
+    return Colors.grey;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Scaffold(
+        appBar: AppBar(title: const Text('حاسبة الأسهم الشهرية')),
+        body: ListView.builder(
+          itemCount: months.length,
+          itemBuilder: (context, index) {
+            final month = months[index];
+            final total = calculateMonthTotal(month);
+            return Card(
+              margin: const EdgeInsets.all(10),
+              child: ListTile(
+                title: Text(month, style: const TextStyle(fontSize: 18)),
+                subtitle: Text(
+                  'الربح/الخسارة: ${total.toStringAsFixed(2)}',
+                  style: TextStyle(
+                    color: getColorForAmount(total),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                trailing: const Icon(Icons.arrow_forward_ios),
+                onTap: () async {
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => MonthDetailScreen(month: month),
+                    ),
+                  );
+                  await loadAllMonthsStocks();
+                },
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
