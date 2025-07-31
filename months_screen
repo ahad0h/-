@@ -27,8 +27,24 @@ class _MonthsScreenState extends State<MonthsScreen> {
 
   Future<void> loadAllMonthsStocks() async {
     Map<String, List<Stock>> loaded = {};
-    for (String month in months) {
-      final stocks = await StorageHelper.loadStocks(month);
+    for (int i = 0; i < months.length; i++) {
+      final month = months[i];
+      List<Stock> stocks = await StorageHelper.loadStocks(month);
+
+      if (i > 0) {
+        final prevMonth = months[i - 1];
+        final prevStocks = await StorageHelper.loadStocks(prevMonth);
+        final unsoldPrevStocks = prevStocks.where((s) => s.sellPrice == null).toList();
+
+        for (final stock in unsoldPrevStocks) {
+          final exists = stocks.any((s) => s.name == stock.name && s.date == stock.date);
+          if (!exists) {
+            stocks.add(stock);
+          }
+        }
+        await StorageHelper.saveStocks(month, stocks);
+      }
+
       loaded[month] = stocks;
     }
     setState(() {
