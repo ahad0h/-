@@ -1,0 +1,80 @@
+import 'package:flutter/material.dart';
+import '../models/stock.dart';
+import '../data/storage_helper.dart';
+
+class AddStockScreen extends StatefulWidget {
+  final String month;
+  const AddStockScreen({required this.month, super.key});
+
+  @override
+  State<AddStockScreen> createState() => _AddStockScreenState();
+}
+
+class _AddStockScreenState extends State<AddStockScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final dateController = TextEditingController();
+  final nameController = TextEditingController();
+  final buyPriceController = TextEditingController();
+  final sellPriceController = TextEditingController();
+  final taxController = TextEditingController();
+
+  Future<void> saveStock() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    final stock = Stock(
+      date: dateController.text,
+      name: nameController.text,
+      buyPrice: double.parse(buyPriceController.text),
+      sellPrice: sellPriceController.text.isEmpty ? null : double.parse(sellPriceController.text),
+      tax: double.parse(taxController.text),
+    );
+
+    final stocks = await StorageHelper.loadStocks(widget.month);
+    stocks.add(stock);
+    await StorageHelper.saveStocks(widget.month, stocks);
+
+    Navigator.pop(context);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Scaffold(
+        appBar: AppBar(title: const Text('إضافة سهم')),
+        body: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Form(
+            key: _formKey,
+            child: ListView(
+              children: [
+                buildTextField(dateController, 'تاريخ الشراء'),
+                buildTextField(nameController, 'اسم السهم'),
+                buildTextField(buyPriceController, 'سعر الشراء', isNumber: true),
+                buildTextField(sellPriceController, 'سعر البيع (اختياري)', isNumber: true),
+                buildTextField(taxController, 'السعر الضريبي', isNumber: true),
+                const SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: saveStock,
+                  child: const Text('حفظ'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget buildTextField(TextEditingController controller, String label, {bool isNumber = false}) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: TextFormField(
+        controller: controller,
+        keyboardType: isNumber ? TextInputType.number : TextInputType.text,
+        decoration: InputDecoration(labelText: label, border: const OutlineInputBorder()),
+        validator: (value) => (value == null || value.isEmpty) ? 'هذا الحقل مطلوب' : null,
+      ),
+    );
+  }
+}
