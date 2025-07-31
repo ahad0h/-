@@ -1,0 +1,19 @@
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../models/stock.dart';
+
+class StorageHelper {
+  static Future<void> saveStocks(String month, List<Stock> stocks) async {
+    final prefs = await SharedPreferences.getInstance();
+    final jsonString = jsonEncode(stocks.map((s) => s.toJson()).toList());
+    await prefs.setString(month, jsonString);
+  }
+
+  static Future<List<Stock>> loadStocks(String month) async {
+    final prefs = await SharedPreferences.getInstance();
+    final jsonString = prefs.getString(month);
+    if (jsonString == null) return [];
+    final List<dynamic> decoded = jsonDecode(jsonString);
+    return decoded.map((e) => Stock.fromJson(e)).toList();
+  }
+}
