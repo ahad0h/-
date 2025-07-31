@@ -16,4 +16,22 @@ class StorageHelper {
     final List<dynamic> decoded = jsonDecode(jsonString);
     return decoded.map((e) => Stock.fromJson(e)).toList();
   }
+
+  static Future<void> updateFollowingMonths(String currentMonth, List<String> months) async {
+    final currentIndex = months.indexOf(currentMonth);
+    if (currentIndex == -1) return;
+
+    final currentStocks = await loadStocks(currentMonth);
+    final soldStocks = currentStocks.where((s) => s.sellPrice != null).toList();
+
+    for (int i = currentIndex + 1; i < months.length; i++) {
+      final month = months[i];
+      final stocks = await loadStocks(month);
+
+      // حذف الأسهم التي تم بيعها من الأشهر القادمة
+      stocks.removeWhere((s) => soldStocks.any((sold) => sold.name == s.name && sold.date == s.date));
+
+      await saveStocks(month, stocks);
+    }
+  }
 }
