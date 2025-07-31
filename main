@@ -16,6 +16,17 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
         fontFamily: 'Arial',
+        scaffoldBackgroundColor: const Color(0xFF88929E),
+        appBarTheme: const AppBarTheme(
+          centerTitle: true,
+          titleTextStyle: TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+          backgroundColor: Color(0xFF4A5A6A),
+          elevation: 2,
+        ),
       ),
       home: const MonthsScreen(),
     );
